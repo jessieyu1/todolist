@@ -1,0 +1,25 @@
+{
+  "name": "todolist",
+  "version": "1.0.0",
+  "description": "jr homework",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jessieyu1/todolist.git"
+  },
+  "author": "Jessie Yu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jessieyu1/todolist/issues"
+  },
+  "homepage": "https://github.com/jessieyu1/todolist#readme",
+  "dependencies": {
+    "express": "^4.17.2",
+    "nodemon": "^2.0.15"
+  }
+}
