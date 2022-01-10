@@ -61,6 +61,27 @@ app.post("/tasks", (req, res) => {
   res.json(task);
 });
 
+app.delete('/tasks/:id', (req, res) => {
+  const id = Number(req.params.id)
+  data = data.filter(task => task.id !== id)
+  res.status(204).end()
+})
+
+app.put('/tasks/:id', (req, res) => {
+  const body = req.body
+  const id = Number(req.params.id)
+  const newTask = {
+    id: id,
+    description: body.description,
+    done: body.done || false
+  }
+  const taskIndex = data.findIndex(task => task.id === id)
+  data[taskIndex] = newTask
+  console.log(data)
+})
+
+
+
 const PORT = 8000;
 app.listen(PORT);
 console.log(`Server running on port ${PORT}`);
