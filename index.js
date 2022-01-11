@@ -1,87 +1,76 @@
 const express = require("express");
+const cors = require("cors");
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 
-let data = [
-  { id: 1, description: "task No.1", done: false },
-  {
-    id: 2,
-    description: "task No.2",
-    done: false,
-  },
-  {
-    id: 3,
-    description: "task No.3",
-    done: false,
-  },
-  {
-    id: 4,
-    description: "task No.4",
-    done: false,
-  },
-  {
-    id: 5,
-    description: "task No.5",
-    done: false,
-  },
-];
+const tasks = [];
 
-const generateId = () => {
-    const maxId = data.length > 0 ? data[data.length - 1].id : 0;
-    return maxId + 1;
-  };
+let id = 1;
 
 app.get("/tasks", (req, res) => {
-  res.json(data);
+  const { description } = req.query;
+  if (description) {
+    const filteredTask = tasks.filter((item) =>
+      item.description.includes(description)
+    );
+    return res.json(filteredTask);
+  }
+  res.json(tasks);
 });
 
 app.get("/tasks/:id", (req, res) => {
-    const id = Number(req.params.id)
-    const task = data.find(task => task.id === id)
-    if (task) {
-        res.json(task)
-    }
-    res.status(404).end()
-})
+  const { id } = req.params;
+  const task = tasks.find((task) => task.id === Number(id));
+  if (!task) {
+    return res.status(404).json({ error: "Task with id not found" });
+  }
+  res.json(task);
+});
 
 app.post("/tasks", (req, res) => {
-  const body = req.body;
-  if (!body.description) {
+  const { description, done } = req.body;
+  if (!description) {
     return res.status(400).json({
       error: "You must provide a description",
     });
   }
   const task = {
-    id: generateId(),
-    description: body.description,
-    done: body.done || false,
+    id: id++,
+    description,
+    done: done || false,
   };
-  data.push(task);
+  tasks.push(task);
+  res.status(201).json(task);
+});
+
+app.delete("/tasks/:id", (req, res) => {
+  const { id } = req.params;
+  const index = tasks.findIndex((i) => i.id === Number(id));
+  if (index === -1) {
+    return res.status(404).json({ error: "Task with id not found" });
+  }
+  tasks.splice(index, 1);
+  res.sendStatus(204);
+});
+
+app.put("/tasks/:id", (req, res) => {
+  const { description, done } = req.body;
+  const { id } = req.params;
+  const task = tasks.find((task) => task.id === Number(id));
+  if (!task) {
+    return res.status(404).json({ error: "Task with id not found" });
+  }
+  if (description) {
+    task.description = description;
+  }
+  if (done !== undefined) {
+    task.done = done;
+  }
   res.json(task);
 });
 
-app.delete('/tasks/:id', (req, res) => {
-  const id = Number(req.params.id)
-  data = data.filter(task => task.id !== id)
-  res.status(204).end()
-})
-
-app.put('/tasks/:id', (req, res) => {
-  const body = req.body
-  const id = Number(req.params.id)
-  const newTask = {
-    id: id,
-    description: body.description,
-    done: body.done || false
-  }
-  const taskIndex = data.findIndex(task => task.id === id)
-  data[taskIndex] = newTask
-  console.log(data)
-})
-
-
-
-const PORT = 8000;
+const PORT = 3000;
 app.listen(PORT);
 console.log(`Server running on port ${PORT}`);
