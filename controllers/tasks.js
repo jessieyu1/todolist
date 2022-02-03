@@ -1,68 +1,205 @@
-const tasksRouter = require("express").Router();
-const tasks = [];
+const Task = require("../models/task");
 
-let id = 1;
+/**
+ * @swagger
+ * components:
+ *  schemas:
+ *    Task:
+ *      type: Object
+ *      required:
+ *        - description
+ *      properties:
+ *        id:
+ *          type: string
+ *          description: auto generated unique identifier
+ *        description:
+ *          type: string
+ *          description: description of the task
+ *        done:
+ *          type: boolean
+ *          description: status of the task
+ *      example:
+ *        id: 1
+ *        description: task 1
+ *        done: false
+ *
+ */
 
-tasksRouter.get("/", (req, res) => {
+function getAllTasks(req, res) {
   const { description } = req.query;
-  if (description) {
-    const filteredTask = tasks.filter((item) =>
-      item.description.includes(description)
-    );
-    return res.json(filteredTask);
-  }
-  res.json(tasks);
-});
+  const data = Task.getAllTasks({ description });
+  res.json(data);
+}
+/**
+ * @swagger
+ * /tasks:
+ *  get:
+ *    summary: return all tasks
+ *    tags: [Tasks]
+ *    parameters:
+ *      - name: description
+ *        in: query
+ *        description: filter tasks by description
+ *        schema:
+ *          type: string
+ *    responses:
+ *      200:
+ *        description: array of tasks
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: array
+ *              items:
+ *                $ref: '#/components/schemas/Task'
+ *
+ */
 
-tasksRouter.get("/:id", (req, res) => {
+function getTaskById(req, res) {
   const { id } = req.params;
-  const task = tasks.find((task) => task.id === Number(id));
-  if (!task) {
-    return res.status(404).json({ error: "Task with id not found" });
-  }
+  const task = Task.getTaskById(id);
   res.json(task);
-});
+}
+/**
+ * @swagger
+ * /tasks/{id}:
+ *  get:
+ *    summary: Get task by id
+ *    tags: [Tasks]
+ *    parameters:
+ *      - name: id
+ *        in: path
+ *        description: task id
+ *        schema:
+ *          type: string
+ *    responses:
+ *      200:
+ *        description: task
+ *        content:
+ *          application/json:
+ *            schema:
+ *              schema:
+ *                $ref: '#/components/schemas/Task'
+ *      404:
+ *        description: task not found
+ *
+ */
 
-tasksRouter.post("/", (req, res) => {
-  const { description, done } = req.body;
+/**
+ * @swagger
+ * /tasks/{id}:
+ *  put:
+ *    summary: Update task by id
+ *    tags: [Tasks]
+ *    parameters:
+ *      - name: id
+ *        in: path
+ *        required: true
+ *        description: task id
+ *        schema:
+ *          type: string
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/Task'
+ *    responses:
+ *      200:
+ *        description: task updated
+ *        content:
+ *          application/json:
+ *            schema:
+ *              schema:
+ *                $ref: '#/components/schemas/Task'
+ *      404:
+ *        description: task not found
+ *
+ */
+
+function updateTaskById(req, res) {
+  const { done, description } = req.body;
+  const { id } = req.params;
+
+  const task = Task.updateTaskById(id, { description, done });
+
+  res.json(task);
+}
+
+/**
+ * @swagger
+ * /tasks/{id}:
+ *  delete:
+ *    summary: delete task by id
+ *    tags: [Tasks]
+ *    parameters:
+ *      - name: id
+ *        in: path
+ *        required: true
+ *        description: task id
+ *        schema:
+ *          type: string
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/Task'
+ *    responses:
+ *      204:
+ *        description: task updated
+ *        content:
+ *          application/json:
+ *            schema:
+ *              schema:
+ *                $ref: '#/components/schemas/Task'
+ *      404:
+ *        description: task not found
+ *
+ */
+function deleteTaskById(req, res) {
+  const { id } = req.params;
+  Task.deleteTaskById(id);
+  res.sendStatus(204);
+}
+/**
+ * @swagger
+ * /tasks:
+ *  post:
+ *    summary: Update task by id
+ *    tags: [Tasks]
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/Task'
+ *    responses:
+ *      201:
+ *        description: task updated
+ *        content:
+ *          application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Task'
+ *      404:
+ *        description: task not found
+ *
+ */
+function createTask(req, res) {
+  const { description } = req.body;
   if (!description) {
     return res.status(400).json({
       error: "You must provide a description",
     });
   }
-  const task = {
-    id: id++,
-    description,
-    done: done || false,
-  };
-  tasks.push(task);
+  const task = Task.addTask({ description });
+
   res.status(201).json(task);
-});
+}
 
-tasksRouter.delete("/:id", (req, res) => {
-  const { id } = req.params;
-  const index = tasks.findIndex((i) => i.id === Number(id));
-  if (index === -1) {
-    return res.status(404).json({ error: "Task with id not found" });
-  }
-  tasks.splice(index, 1);
-  res.sendStatus(204);
-});
-
-tasksRouter.put("/:id", (req, res) => {
-  const { description, done } = req.body;
-  const { id } = req.params;
-  const task = tasks.find((task) => task.id === Number(id));
-  if (!task) {
-    return res.status(404).json({ error: "Task with id not found" });
-  }
-  if (description) {
-    task.description = description;
-  }
-  if (done !== undefined) {
-    task.done = done;
-  }
-  res.json(task);
-});
-
-module.exports = tasksRouter;
+module.exports = {
+  getAllTasks,
+  getTaskById,
+  updateTaskById,
+  createTask,
+  deleteTaskById,
+};
